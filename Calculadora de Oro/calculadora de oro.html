@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora de Oro: Venta y Compra</title>
+  <style>
+    /* ————————————————
+       Pestañas (tabs) - ocultar/mostrar
+       ———————————————— */
+    .tab-content {
+      display: none;
+      margin: 0;
+      padding: 0;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ————————————————
+       Estilos generales
+       ———————————————— */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f2f5;
+      color: #333;
+    }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-top: 1rem;
+      gap: 1rem;
+    }
+    .tab-button {
+      padding: 0.75rem 1.5rem;
+      background-color: #e0e0e0;
+      border: none;
+      border-radius: 4px 4px 0 0;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.2s;
+    }
+    .tab-button.active {
+      background-color: #fff;
+      border-bottom: 2px solid #0077cc;
+      color: #0077cc;
+      font-weight: bold;
+    }
+    .tab-button:hover:not(.active) {
+      background-color: #d4d4d4;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto 2rem;
+      background-color: #fff;
+      padding: 1.5rem;
+      border-radius: 0 8px 8px 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.6rem;
+    }
+    h3 {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+    }
+    .section {
+      margin-bottom: 2rem;
+    }
+    .fields-global {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .fields-global label {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      font-size: 0.9rem;
+    }
+    input, select {
+      width: 100%;
+      margin-top: 0.25rem;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    /* Botón verde de "Agregar entrada" en Venta */
+    .btn-add {
+      background-color: #28a745;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+    .btn-add:hover {
+      background-color: #218838;
+    }
+    /* Botones de "Calcular" en Venta (full-width) */
+    .btn-calc {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #0077cc;
+      color: #fff;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .btn-calc:hover {
+      background-color: #005fa3;
+    }
+    /* Botones de "Calcular" en Compra (full-width) */
+    /* — Se mantiene igual que antes, sin cambiar — */
+
+    #resultadoA,
+    #resultado,
+    #resultadoSupervisor,
+    #resultadoMaterial {
+      background-color: #e9f5ff;
+      padding: 1rem;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-top: 1rem;
+      min-height: 2.5rem;
+    }
+    .divider {
+      height: 1px;
+      background-color: #ddd;
+      margin: 2rem 0;
+    }
+    .entry {
+      margin-bottom: 1rem;
+      background: #fafafa;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 1rem;
+    }
+    .entry-remove {
+      text-align: right;
+      margin-top: 0.5rem;
+    }
+    .btn-remove {
+      background-color: #dc3545;
+      color: #fff;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-remove:hover {
+      background-color: #c82333;
+    }
+    .positivo {
+      color: #28a745;
+      font-weight: bold;
+    }
+    .negativo {
+      color: #dc3545;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- Botones de pestañas -->
+  <div class="tabs">
+    <button class="tab-button active" data-tab="tab1">Venta</button>
+    <button class="tab-button" data-tab="tab2">Compra</button>
+  </div>
+
+  <!-- =========================
+       PESTAÑA 1: VENTA
+       ========================= -->
+  <div id="tab1" class="tab-content active">
+    <div class="container">
+      <h2>Calculadora de Oro - Venta</h2>
+      <div class="actions" style="text-align: right;">
+        <!-- Botón verde "Agregar entrada" alineado a la derecha -->
+        <button class="btn-add" onclick="addEntryA()">+ Agregar entrada</button>
+      </div>
+      <form id="calcFormA" onsubmit="event.preventDefault(); calcularA();">
+        <div id="entriesA"></div>
+        <div class="fields-global">
+          <label>Precio por onza ($):
+            <input type="number" id="precioA" step="any" placeholder="3300">
+          </label>
+          <label>Costo total ($):
+            <input type="number" id="costoGlobalA" step="any" placeholder="Opcional">
+          </label>
+        </div>
+        <div class="fields-global">
+          <label>Moneda:
+            <select id="monedaA">
+              <option value="USD">USD</option>
+              <option value="NIO">C$</option>
+            </select>
+          </label>
+          <label>Tipo de cambio (C$/1 $):
+            <input type="number" id="tcA" step="any" placeholder="36.62" value="36.62">
+          </label>
+        </div>
+        <button type="submit" class="btn-calc">Calcular</button>
+      </form>
+      <div id="resultadoA"></div>
+    </div>
+  </div>
+
+  <!-- =========================
+       PESTAÑA 2: COMPRA
+       ========================= -->
+  <div id="tab2" class="tab-content">
+    <div class="container">
+      <h2>Compra de Oro</h2>
+
+      <!-- Tipo de cambio general (editable) -->
+      <div class="section">
+        <div class="fields-global">
+          <label>Tipo de cambio (C$/USD):
+            <input type="number" id="tcGeneral" step="any" value="36.63">
+          </label>
+        </div>
+      </div>
+
+      <!-- 1) Cálculo Implícito -->
+      <div class="section">
+        <form id="compraForm" onsubmit="event.preventDefault(); calcularCompra();">
+          <div class="fields-global">
+            <label>Spot onza (USD):
+              <input type="number" id="spot" step="any" placeholder="Ej. 3300">
+            </label>
+          </div>
+          <div class="fields-global">
+            <label>Precio por punto (C$):
+              <input type="number" id="precioPunto" step="any" placeholder="Ej. 140">
+            </label>
+            <label>Moneda:
+              <select id="moneda">
+                <option value="C$" selected>Córdobas (C$)</option>
+                <option value="USD">USD</option>
+              </select>
+            </label>
+          </div>
+          <!-- El botón azul de ancho completo se mantiene aquí -->
+          <button type="submit" class="btn-calc">Calcular Implícito</button>
+        </form>
+        <div id="resultado"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 2) Supervisor de Descuento -->
+      <div class="section">
+        <h3>Supervisor de Descuento</h3>
+        <form id="supervisorForm" onsubmit="event.preventDefault(); calcularSupervisor();">
+          <div class="fields-global">
+            <label>Precio internacional (USD/oz):
+              <input type="number" id="spotInt" step="any" placeholder="Ej. 3300">
+            </label>
+            <label>Descuento deseado (%):
+              <input type="number" id="descDeseado" step="any" placeholder="Ej. 5">
+            </label>
+          </div>
+          <!-- Botón azul de ancho completo -->
+          <button type="submit" class="btn-calc">Calcular Punto Objetivo</button>
+        </form>
+        <div id="resultadoSupervisor"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 3) Calcular Precio por Peso y Kilataje -->
+      <div class="section">
+        <h3>Calcular Precio por Peso y Kilataje</h3>
+        <form id="materialForm" onsubmit="event.preventDefault(); calcularMaterial();">
+          <div class="fields-global">
+            <label>Peso (g):
+              <input type="number" id="pesoMaterial" step="any" placeholder="Ej. 100">
+            </label>
+            <label>Kilataje:
+              <input type="number" id="kilatajeMaterial" step="any" placeholder="Ej. 24">
+            </label>
+          </div>
+          <div class="fields-global">
+            <label>Precio por punto (C$):
+              <input type="number" id="precioPuntoMat" step="any" placeholder="Ej. 3360">
+            </label>
+            <label>Moneda:
+              <select id="monedaMat">
+                <option value="C$" selected>Córdobas (C$)</option>
+              </select>
+            </label>
+          </div>
+          <!-- Botón azul de ancho completo -->
+          <button type="submit" class="btn-calc">Calcular costo material</button>
+        </form>
+        <div id="resultadoMaterial"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ——————————
+    //  Lógica de pestañas (tabs)
+    // ——————————
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ——————————
+    //  CALCULADORA A (Venta)
+    // ——————————
+    let entryCountA = 0;
+    const maxEntriesA = 6;
+    const entriesContainerA = document.getElementById('entriesA');
+
+    function addEntryA() {
+      if (entryCountA >= maxEntriesA) return;
+      entryCountA++;
+      const div = document.createElement('div');
+      div.className = 'entry';
+      div.id = `entryA${entryCountA}`;
+      div.innerHTML = `
+        <div class="fields-global">
+          <label>Peso (g):<input type="number" id="pesoA${entryCountA}" step="any" placeholder="112.8"></label>
+          <label>Kilataje:<input type="number" id="kilatajeA${entryCountA}" step="any" placeholder="23.43"></label>
+        </div>
+        <div class="fields-global">
+          <label>Costo ($):<input type="number" id="costoA${entryCountA}" step="any" placeholder="Opcional"></label>
+        </div>
+        <div class="entry-remove">
+          <button type="button" class="btn-remove" onclick="removeEntryA(${entryCountA})">Eliminar</button>
+        </div>
+      `;
+      entriesContainerA.appendChild(div);
+    }
+
+    function removeEntryA(id) {
+      const el = document.getElementById(`entryA${id}`);
+      if (el) {
+        el.remove();
+        entryCountA--;
+      }
+    }
+
+    // Inicializar con una entrada
+    addEntryA();
+
+    function calcularA() {
+      const precio = parseFloat(document.getElementById('precioA').value) || 0;
+      const costoGlobal = parseFloat(document.getElementById('costoGlobalA').value) || 0;
+      const moneda = document.getElementById('monedaA').value;
+      const tipoCambio = parseFloat(document.getElementById('tcA').value) || 1;
+
+      let totalPureGrams = 0;
+      let totalCostoUSD = costoGlobal;
+
+      for (let i = 1; i <= maxEntriesA; i++) {
+        const pesoEl = document.getElementById(`pesoA${i}`);
+        const kilEl = document.getElementById(`kilatajeA${i}`);
+        const costEl = document.getElementById(`costoA${i}`);
+        if (pesoEl && kilEl && pesoEl.value && kilEl.value) {
+          const peso = parseFloat(pesoEl.value);
+          const kil = parseFloat(kilEl.value);
+          totalPureGrams += peso * (kil / 24);
+          if (costEl && costEl.value) totalCostoUSD += parseFloat(costEl.value);
+        }
+      }
+
+      const onzas = totalPureGrams / 31.1035;
+      const valorUSD = onzas * precio;
+      const gananciaUSD = valorUSD - totalCostoUSD;
+      const roiPercent = totalCostoUSD > 0 ? (gananciaUSD / totalCostoUSD) * 100 : 0;
+
+      const fmt = (num, frac = 2) =>
+        num.toLocaleString('es-NI', {
+          minimumFractionDigits: frac,
+          maximumFractionDigits: frac
+        });
+
+      let valorFinal, gananciaFinal, simbolo;
+      if (moneda === 'USD') {
+        valorFinal = valorUSD;
+        gananciaFinal = gananciaUSD;
+        simbolo = '$';
+      } else {
+        valorFinal = valorUSD * tipoCambio;
+        gananciaFinal = gananciaUSD * tipoCambio;
+        simbolo = 'C$';
+      }
+
+      let html = `<div class="result-group">
+        <h4>Resumen General</h4>
+        <ul>
+          <li><strong>Oro puro total:</strong> ${fmt(totalPureGrams)} g</li>
+          <li><strong>Onzas troy:</strong> ${fmt(onzas, 4)} oz</li>
+          <li><strong>Valor est.:</strong> ${simbolo}${fmt(valorFinal)}</li>
+          <li><strong>Costo total (USD):</strong> $${fmt(totalCostoUSD)}</li>
+          <li><strong>Ganancia:</strong>
+            <span class="${gananciaFinal >= 0 ? 'positivo' : 'negativo'}">
+              ${simbolo}${fmt(gananciaFinal)}
+            </span>
+          </li>
+          <li><strong>ROI:</strong> ${totalCostoUSD > 0 ? fmt(roiPercent) + '%' : '—'}</li>
+        </ul>
+      </div>`;
+
+      html += `<div class="result-group">
+        <h4>Escenarios de Oferta</h4>
+        <ul>`;
+      [0.02, 0.03, 0.04].forEach(d => {
+        const precioDesc = precio * (1 - d);
+        const valorDescUSD = onzas * precioDesc;
+        const ganDescUSD = valorDescUSD - totalCostoUSD;
+        let valorDescFinal = moneda === 'USD' ? valorDescUSD : valorDescUSD * tipoCambio;
+        let ganDescFinal = moneda === 'USD' ? ganDescUSD : ganDescUSD * tipoCambio;
+        html += `<li>-${(d * 100).toFixed(0)}%: 
+          ${simbolo}${fmt(valorDescFinal)} → 
+          <span class="${ganDescFinal >= 0 ? 'positivo' : 'negativo'}">
+            ${simbolo}${fmt(ganDescFinal)}
+          </span>
+        </li>`;
+      });
+      html += `</ul></div>`;
+
+      document.getElementById('resultadoA').innerHTML = html;
+    }
+
+    // ——————————
+    //  CALCULAR IMPLÍCITO (Compra)
+    // ——————————
+    const factorPuntosPorOnza = 746.484; // 31.1035 g × 24 puntos/g
+
+    function formatear(num) {
+      return num.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function calcularCompra() {
+      const spot = parseFloat(document.getElementById('spot').value) || 0;
+      const tipoCambio = parseFloat(document.getElementById('tcGeneral').value) || 1;
+      const precioPuntoInput = parseFloat(document.getElementById('precioPunto').value) || 0;
+      const moneda = document.getElementById('moneda').value;
+
+      // Convertir precio por punto a USD
+      let precioPuntoUSD;
+      if (moneda === 'C$') {
+        precioPuntoUSD = precioPuntoInput / tipoCambio;
+      } else {
+        precioPuntoUSD = precioPuntoInput;
+      }
+
+      // Valor implícito de 1 onza pura en USD y C$
+      const onzaImplicitaUSD = precioPuntoUSD * factorPuntosPorOnza;
+      const onzaImplicitaC = onzaImplicitaUSD * tipoCambio;
+
+      // Descuento vs spot
+      let descuento = '—';
+      if (spot > 0) {
+        descuento = ((1 - (onzaImplicitaUSD / spot)) * 100).toFixed(2) + '%';
+      }
+
+      // Mostrar resultados con formato
+      const html =
+        `<strong>Precio por punto:</strong> ${formatear(precioPuntoInput)} ${moneda}<br>` +
+        `<strong>Equivale a (punto en USD):</strong> $${formatear(precioPuntoUSD)} USD<br><br>` +
+        `<strong>Valor onza implícita:</strong> $${formatear(onzaImplicitaUSD)} USD / C$${formatear(onzaImplicitaC)}<br>` +
+        `<strong>Descuento vs spot (${formatear(spot)} USD/oz):</strong> ${descuento}`;
+
+      document.getElementById('resultado').innerHTML = html;
+    }
+
+    // ——————————
+    //  CALCULAR SUPERVISOR DE DESCUENTO (Compra)
+    // ——————————
+    function calcularSupervisor() {
+      const spotInt = parseFloat(document.getElementById('spotInt').value) || 0;
+      const dDeseadoPct = parseFloat(document.getElementById('descDeseado').value) || 0;
+      const tipoCambio = parseFloat(document.getElementById('tcGeneral').value) || 1;
+      const descuento = dDeseadoPct / 100; // ej. 5% → 0.05
+
+      // USD/punto para lograr descuento: (spotInt * (1 - descuento)) / 746.484
+      const usdPunto = (spotInt * (1 - descuento)) / factorPuntosPorOnza;
+      const puntoC = usdPunto * tipoCambio;
+
+      // Mostrar resultados con formato
+      const html =
+        `<strong>Spot internacional:</strong> $${formatear(spotInt)} USD/oz<br>` +
+        `<strong>Descuento deseado:</strong> ${formatear(dDeseadoPct)}%<br><br>` +
+        `<strong>Para lograr ese descuento, pagar punto:</strong> $${formatear(usdPunto)} USD / C$${formatear(puntoC)}`;
+
+      document.getElementById('resultadoSupervisor').innerHTML = html;
+    }
+
+    // ——————————
+    //  CALCULAR PRECIO POR PESO Y KILATAJE (Compra)
+    // ——————————
+    function calcularMaterial() {
+      const peso = parseFloat(document.getElementById('pesoMaterial').value) || 0;   // en gramos de aleación
+      const kil = parseFloat(document.getElementById('kilatajeMaterial').value) || 0; // kilataje (K)
+      const precioPuntoInput = parseFloat(document.getElementById('precioPuntoMat').value) || 0;
+      const tipoCambio = parseFloat(document.getElementById('tcGeneral').value) || 1;
+
+      // Convertir precio por punto a USD
+      const precioPuntoUSD = precioPuntoInput / tipoCambio;
+
+      // USD/oz pura a partir de precio por punto
+      const usdPorOnzaPura = precioPuntoUSD * factorPuntosPorOnza;
+
+      // USD por gramo de oro puro: dividir por 31.1035 g/oz
+      const usdPorGramoPuro = usdPorOnzaPura / 31.1035;
+
+      // USD por gramo de aleación: multiplicar por (kil/24)
+      const usdPorGramoAleacion = usdPorGramoPuro * (kil / 24);
+
+      // C$/g de aleación
+      const cPorGramoAleacion = usdPorGramoAleacion * tipoCambio;
+
+      // Precio total para peso dado
+      const costoTotalUSD = usdPorGramoAleacion * peso;
+      const costoTotalC = costoTotalUSD * tipoCambio;
+
+      // Mostrar resultados con formato
+      const html =
+        `<strong>Peso:</strong> ${formatear(peso)} g de ${formatear(kil)} K<br>` +
+        `<strong>Precio por gr de aleación:</strong> $${formatear(usdPorGramoAleacion)} USD / C$${formatear(cPorGramoAleacion)}<br>` +
+        `<strong>Costo total:</strong> $${formatear(costoTotalUSD)} USD / C$${formatear(costoTotalC)}`;
+
+      document.getElementById('resultadoMaterial').innerHTML = html;
+    }
+  </script>
+</body>
+</html>
